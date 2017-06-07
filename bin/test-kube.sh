@@ -3,7 +3,7 @@ brew install cookiecutter kubernetes-cli
 minikube start
 RECIPE=$(pwd)
 cd /tmp
-cookiecutter $RECIPE
+cookiecutter --no-input $RECIPE app_name=xrpc java_package=com.xjeffrose.xrpc
 cd xrpc
 eval $(minikube docker-env)
 docker built -t xrpc-node:v0.0.1 .
