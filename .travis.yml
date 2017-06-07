@@ -1,0 +1,6 @@
+
+notifications:
+  email: false
+osx_image: xcode8.3
+os: osx
+script: ./bin/test-kube.sh
