@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{cookiecutter.app_name}} # Name of the application.
+  namespace: default      # Namespace name.
+  labels:
+    app: {{cookiecutter.app_name}}
+spec:
+  rules:
+    - host: {{cookiecutter.app_name}}.default.platform.prod.aws.cloud.{{cookiecutter.deployment_domain}} # hostname for your application. Please add namespace to avoid colision.
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: sample-app
+              servicePort: 80
+  # - host: {{cookiecutter.app_name}}.{{cookiecutter.deployment_domain}} # If you want to use a friendly name, create a DNS CNAME entry pointing to the above hostname
+  #   http:
+  #     paths:
+  #       - path: /
+  #         backend:
+  #           serviceName: sample-app
+  #           servicePort: 80
