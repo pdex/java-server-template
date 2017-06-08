@@ -3,10 +3,10 @@ package {{cookiecutter.java_package}};
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-public class XConfig {
+public class AppConfig {
   private final Config config = ConfigFactory.load();
 
-  public XConfig() {
+  public AppConfig() {
 
   }
 

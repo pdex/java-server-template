@@ -1,6 +1,6 @@
 package {{cookiecutter.java_package}}.http;
 
-import {{cookiecutter.java_package}}.XConfig;
+import {{cookiecutter.java_package}}.AppConfig;
 import {{cookiecutter.java_package}}.tls.TLS;
 import {{cookiecutter.java_package}}.logging.MessageLogger;
 import {{cookiecutter.java_package}}.logging.ExceptionLogger;
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class Router {
-  private final XConfig config = new XConfig();
+  private final AppConfig config = new AppConfig();
 
   private final Map<Route, Function<HttpRequest, HttpResponse>> s_routes = new HashMap<>();
   private final Map<Route, BiFunction<HttpRequest, Route, HttpResponse>> b_routes = new HashMap<>();
