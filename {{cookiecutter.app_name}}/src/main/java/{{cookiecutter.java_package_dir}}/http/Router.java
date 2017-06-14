@@ -1,6 +1,6 @@
 package {{cookiecutter.java_package}}.http;
 
-import {{cookiecutter.java_package}}.XConfig;
+import {{cookiecutter.java_package}}.AppConfig;
 import {{cookiecutter.java_package}}.tls.TLS;
 import {{cookiecutter.java_package}}.logging.MessageLogger;
 import {{cookiecutter.java_package}}.logging.ExceptionLogger;
@@ -58,16 +58,8 @@ import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class Router {
-  private final XConfig config = new XConfig();
+  private final AppConfig config = new AppConfig();
 
-  private final int NO_READER_IDLE_TIMEOUT = config.readerIdleTimeout();
-  private final int NO_WRITER_IDLE_TIMEOUT = config.writerIdleTimeout();;
-  private final int NO_ALL_IDLE_TIMEOUT = config.requestIdleTimeout();
-
-  private final String workerNameFormat = config.workerNameFormat();
-
-  private final int bossThreads = config.bossThreads();
-  private final int workerThreads = config.workerThreads();
   private final Map<Route, Function<HttpRequest, HttpResponse>> s_routes = new HashMap<>();
   private final Map<Route, BiFunction<HttpRequest, Route, HttpResponse>> b_routes = new HashMap<>();
 
@@ -124,12 +116,12 @@ public class Router {
     URLRouter router = new URLRouter();
 
     if (Epoll.isAvailable()) {
-      bossGroup = new EpollEventLoopGroup(bossThreads, threadFactory(workerNameFormat));
-      workerGroup = new EpollEventLoopGroup(workerThreads, threadFactory(workerNameFormat));
+      bossGroup = new EpollEventLoopGroup(config.bossThreads(), threadFactory(config.bossNameFormat()));
+      workerGroup = new EpollEventLoopGroup(config.workerThreads(), threadFactory(config.workerNameFormat()));
       channelClass = EpollServerSocketChannel.class;
     } else {
-      bossGroup = new NioEventLoopGroup(bossThreads, threadFactory(workerNameFormat));
-      workerGroup = new NioEventLoopGroup(workerThreads, threadFactory(workerNameFormat));
+      bossGroup = new NioEventLoopGroup(config.bossThreads(), threadFactory(config.bossNameFormat()));
+      workerGroup = new NioEventLoopGroup(config.workerThreads(), threadFactory(config.workerNameFormat()));
       channelClass = NioServerSocketChannel.class;
 
       b.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
@@ -150,21 +142,21 @@ public class Router {
         cp.addLast("encryptionHandler", new TLS(config.cert(), config.key()).getEncryptionHandler()); // Add Config for Certs
         cp.addLast("messageLogger", new MessageLogger());
         cp.addLast("codec", new HttpServerCodec());
-        cp.addLast("aggregator", new HttpObjectAggregator(1*1024*1024)); // Aggregate up to 1MB
+        cp.addLast("aggregator", new HttpObjectAggregator(config.httpMessageSize())); // Aggregate up to limits.http_message_size
 //        cp.addLast("aggregator", new NoOpHandler()); // Not Needed but maybe keep in here?
         cp.addLast("authHandler", new NoOpHandler()); // OAuth2.0 Impl needed
         cp.addLast("routingFilter", router);
         cp.addLast("idleDisconnectHandler", new IdleDisconnectHandler(
-            NO_READER_IDLE_TIMEOUT,
-            NO_WRITER_IDLE_TIMEOUT,
-            NO_ALL_IDLE_TIMEOUT));
+            config.readerIdleTimeout(),
+            config.writerIdleTimeout(),
+            config.requestIdleTimeout()));
         cp.addLast("exceptionLogger", new ExceptionLogger());
 
       }
 
     });
 
-    ChannelFuture future = b.bind(new InetSocketAddress(config.port()));
+    ChannelFuture future = b.bind(new InetSocketAddress(config.ip(), config.port()));
 
     try {
       // Get some loggy logs
